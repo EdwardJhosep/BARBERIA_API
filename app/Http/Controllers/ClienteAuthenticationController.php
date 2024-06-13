@@ -6,7 +6,6 @@ use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class ClienteAuthenticationController extends Controller
 {
@@ -28,19 +27,24 @@ class ClienteAuthenticationController extends Controller
         ]);
 
         if ($request->hasFile('foto')) {
-            $validatedData['foto'] = $request->file('foto')->store('clientes', 'public');
+            // Guardar la imagen directamente en public/clientes
+            $path = $request->file('foto')->move(public_path('clientes'), $request->file('foto')->getClientOriginalName());
+            $validatedData['foto'] = 'clientes/' . $request->file('foto')->getClientOriginalName();
         }
 
-        $cliente = Cliente::create(array_merge(
-            $validatedData,
-            ['password' => Hash::make($request->password)]
-        ));
+        // Hash de la contraseña antes de guardarla
+        $validatedData['password'] = Hash::make($validatedData['password']);
 
-        return response()->json($cliente, 201);
+        $cliente = Cliente::create($validatedData);
+
+        return response()->json([
+            'message' => 'Registro exitoso',
+            'cliente' => $cliente
+        ], 201);
     }
 
     /**
-     * Inicio de sesión de clientes sin autenticación adicional
+     * Inicio de sesión de clientes
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -52,17 +56,15 @@ class ClienteAuthenticationController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($credentials)) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales proporcionadas son incorrectas.'],
-            ]);
+        $cliente = Cliente::where('email', $credentials['email'])->first();
+
+        if (!$cliente || !Hash::check($credentials['password'], $cliente->password)) {
+            return response()->json(['error' => 'Credenciales inválidas'], 401);
         }
 
-        $cliente = Cliente::where('email', $credentials['email'])->firstOrFail();
-
-        return response()->json($cliente, 200);
+        return response()->json(['message' => 'Sesión iniciada correctamente', 'cliente' => $cliente]);
     }
-
+    
     /**
      * Cierre de sesión de clientes
      *
@@ -73,6 +75,6 @@ class ClienteAuthenticationController extends Controller
     {
         Auth::logout();
 
-        return response()->json(['message' => 'Successfully logged out'], 200);
+        return response()->json(['message' => 'Sesión cerrada correctamente'], 200);
     }
 }

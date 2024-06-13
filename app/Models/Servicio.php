@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Servicio extends Model
 {
     protected $fillable = [
-        'nombre', 'descripcion', 'precio', 'foto1', 'foto2', 'foto3',
+        'nombre', 'descripcion','descuento','precio_final', 'precio', 'foto1', 'foto2', 'foto3',
     ];
 
     // Relación con citas

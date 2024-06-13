@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Servicio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ServicioController extends Controller
 {
@@ -43,72 +44,90 @@ class ServicioController extends Controller
             'nombre' => 'required|string',
             'descripcion' => 'nullable|string',
             'precio' => 'required|numeric',
+            'descuento' => 'nullable|numeric',
             'foto1' => 'nullable|image',
             'foto2' => 'nullable|image',
             'foto3' => 'nullable|image',
         ]);
 
-        // Guardar las fotos si existen
         $fotos = [];
         foreach (['foto1', 'foto2', 'foto3'] as $fotoField) {
             if ($request->hasFile($fotoField)) {
-                $fotos[$fotoField] = $request->file($fotoField)->store('servicios', 'public');
+                $foto = $request->file($fotoField);
+                $fileName = Str::random(20) . '.' . $foto->getClientOriginalExtension();
+                $path = $foto->move(public_path('servicios'), $fileName); // Almacenamos en public/servicios
+                $fotos[$fotoField] = '/servicios/' . $fileName; // Guardamos la ruta completa
             }
+        }
+
+        $precio_final = $validatedData['precio'];
+        if (isset($validatedData['descuento'])) {
+            $precio_final -= $validatedData['descuento'];
         }
 
         $servicio = Servicio::create(array_merge(
             $validatedData,
-            $fotos
+            $fotos,
+            ['precio_final' => $precio_final]
         ));
 
         return response()->json($servicio, 201);
     }
 
     /**
-     * Actualizar un servicio
+     * Actualizar un servicio existente
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         $validatedData = $request->validate([
+            'id' => 'required|exists:servicios,id',
             'nombre' => 'required|string',
             'descripcion' => 'nullable|string',
             'precio' => 'required|numeric',
+            'descuento' => 'nullable|numeric',
             'foto1' => 'nullable|image',
             'foto2' => 'nullable|image',
             'foto3' => 'nullable|image',
         ]);
 
-        $servicio = Servicio::findOrFail($id);
+        $servicio = Servicio::findOrFail($request->id);
 
-        // Eliminar las fotos anteriores si existen
-        foreach (['foto1', 'foto2', 'foto3'] as $fotoField) {
-            if ($request->hasFile($fotoField) && $servicio->$fotoField) {
-                Storage::disk('public')->delete($servicio->$fotoField);
-            }
-        }
-
-        // Guardar las fotos nuevas si existen
+        // Eliminar fotos antiguas si se envían nuevas fotos
         $fotos = [];
         foreach (['foto1', 'foto2', 'foto3'] as $fotoField) {
             if ($request->hasFile($fotoField)) {
-                $fotos[$fotoField] = $request->file($fotoField)->store('servicios', 'public');
+                // Eliminar la foto antigua si existe
+                if ($servicio->{$fotoField}) {
+                    $this->deleteServicioFoto($servicio->{$fotoField});
+                }
+
+                $foto = $request->file($fotoField);
+                $fileName = Str::random(20) . '.' . $foto->getClientOriginalExtension();
+                $path = $foto->move(public_path('servicios'), $fileName);
+                $fotos[$fotoField] = '/servicios/' . $fileName;
             }
         }
 
+        $precio_final = $validatedData['precio'];
+        if (isset($validatedData['descuento'])) {
+            $precio_final -= $validatedData['descuento'];
+        }
+
+        // Actualizar los datos del servicio
         $servicio->update(array_merge(
             $validatedData,
-            $fotos
+            $fotos,
+            ['precio_final' => $precio_final]
         ));
 
         return response()->json($servicio, 200);
     }
 
     /**
-     * Eliminar un servicio
+     * Eliminar un servicio existente
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -117,15 +136,31 @@ class ServicioController extends Controller
     {
         $servicio = Servicio::findOrFail($id);
 
-        // Eliminar las fotos del servicio si existen
+        // Eliminar las fotos si existen
         foreach (['foto1', 'foto2', 'foto3'] as $fotoField) {
-            if ($servicio->$fotoField) {
-                Storage::disk('public')->delete($servicio->$fotoField);
+            if ($servicio->{$fotoField}) {
+                $this->deleteServicioFoto($servicio->{$fotoField});
             }
         }
 
+        // Eliminar el servicio
         $servicio->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Servicio eliminado correctamente'], 200);
+    }
+
+    /**
+     * Eliminar la foto de un servicio
+     *
+     * @param  string  $photoPath
+     * @return void
+     */
+    protected function deleteServicioFoto($photoPath)
+    {
+        $photoPath = public_path($photoPath);
+
+        if (file_exists($photoPath)) {
+            unlink($photoPath);
+        }
     }
 }

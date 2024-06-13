@@ -62,28 +62,35 @@ class EmpleadoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         $validatedData = $request->validate([
+            'id' => 'required|exists:empleados,id',
             'nombre' => 'required|string',
             'telefono' => 'required|string',
             'tipo' => 'required|string',
             'foto' => 'nullable|image',
         ]);
-
-        $empleado = Empleado::findOrFail($id);
-
+    
+        $empleado = Empleado::findOrFail($validatedData['id']);
+    
         if ($request->hasFile('foto')) {
             // Eliminar la foto anterior si existe
             if ($empleado->foto) {
                 Storage::disk('public')->delete($empleado->foto);
             }
             // Guardar la nueva foto
-            $validatedData['foto'] = $request->file('foto')->store('empleados', 'public');
+            $path = $request->file('foto')->move(public_path('empleados'), $request->file('foto')->getClientOriginalName());
+            $validatedData['foto'] = 'empleados/' . $request->file('foto')->getClientOriginalName();
         }
-
-        $empleado->update($validatedData);
-
+    
+        $empleado->update([
+            'nombre' => $validatedData['nombre'],
+            'telefono' => $validatedData['telefono'],
+            'tipo' => $validatedData['tipo'],
+            'foto' => $validatedData['foto'] ?? $empleado->foto, // mantener la foto existente si no se sube una nueva
+        ]);
+    
         return response()->json($empleado, 200);
     }
 
@@ -104,6 +111,6 @@ class EmpleadoController extends Controller
 
         $empleado->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Empleado eliminado correctamente'], 200);
     }
 }

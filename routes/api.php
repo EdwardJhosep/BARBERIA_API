@@ -23,8 +23,8 @@ Route::post('/cliente/logout', [ClienteAuthenticationController::class, 'logout'
 Route::get('/verempleados', [EmpleadoController::class, 'index']);
 Route::get('/empleados/{id}', [EmpleadoController::class, 'show']);
 Route::post('/empleados', [EmpleadoController::class, 'store']);
-Route::put('/empleados/{id}', [EmpleadoController::class, 'update']);
-Route::delete('/empleados/{id}', [EmpleadoController::class, 'destroy']);
+Route::post('/actualizarempleado', [EmpleadoController::class, 'update']);
+Route::post('/eliminarempleados/{id}', [EmpleadoController::class, 'destroy']);
 
 Route::get('/vercitas', [CitaController::class, 'index']);
 Route::get('/citas/{id}', [CitaController::class, 'show']);
@@ -36,8 +36,8 @@ Route::get('/citas/codigo/{codigo}', [CitaController::class, 'buscarPorCodigo'])
 Route::get('/verservicios', [ServicioController::class, 'index']);
 Route::get('/servicios/{id}', [ServicioController::class, 'show']);
 Route::post('/servicios', [ServicioController::class, 'store']);
-Route::put('/servicios/{id}', [ServicioController::class, 'update']);
-Route::delete('/servicios/{id}', [ServicioController::class, 'destroy']);
+Route::post('/servicioactualizar', [ServicioController::class, 'update']);
+Route::post('/servicioeliminar/{id}', [ServicioController::class, 'destroy']);
 
 Route::get('/notificaciones', [NotificacionController::class, 'index']);
 Route::get('/notificaciones/{id}', [NotificacionController::class, 'show']);

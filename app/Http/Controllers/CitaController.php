@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Cita;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class CitaController extends Controller
 {
@@ -38,19 +40,26 @@ class CitaController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'client_id' => 'required|exists:clientes,id',
             'servicio_id' => 'required|exists:servicios,id',
             'empleado_id' => 'required|exists:empleados,id',
             'fecha_hora' => 'required|date',
             'precio_estimado' => 'required|numeric',
-            // 'codigo_unico' => 'nullable|string', // No es necesario incluirlo aquí
-            'qr_code' => 'nullable|string',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        // Generar un código QR único de 9 caracteres
+        $qrCode = Str::random(9);
+        $validatedData = $validator->validated();
+        $validatedData['qr_code'] = $qrCode;
 
         $cita = Cita::create($validatedData);
 
-        return response()->json($cita, 201);
+        return response()->json(['message' => 'Cita creada correctamente', 'cita' => $cita], 201);
     }
 
     /**
@@ -62,20 +71,24 @@ class CitaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'client_id' => 'required|exists:clientes,id',
             'servicio_id' => 'required|exists:servicios,id',
             'empleado_id' => 'required|exists:empleados,id',
             'fecha_hora' => 'required|date',
             'precio_estimado' => 'required|numeric',
-            // 'codigo_unico' => 'nullable|string', // No es necesario incluirlo aquí
             'qr_code' => 'nullable|string',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
         $cita = Cita::findOrFail($id);
+        $validatedData = $validator->validated();
         $cita->update($validatedData);
 
-        return response()->json($cita, 200);
+        return response()->json(['message' => 'Cita actualizada correctamente', 'cita' => $cita], 200);
     }
 
     /**
@@ -89,7 +102,7 @@ class CitaController extends Controller
         $cita = Cita::findOrFail($id);
         $cita->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Cita eliminada correctamente'], 200);
     }
 
     /**
