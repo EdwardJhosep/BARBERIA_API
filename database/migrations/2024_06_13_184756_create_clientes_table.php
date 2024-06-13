@@ -15,7 +15,7 @@ class CreateClientesTable extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->enum('genero', ['masculino', 'femenino', 'otro'])->nullable();
-            $table->string('foto')->nullable(); // Nuevo campo de foto
+            $table->string('foto')->nullable();
             $table->timestamps();
         });
     }
