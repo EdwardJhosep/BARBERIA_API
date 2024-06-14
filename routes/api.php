@@ -29,7 +29,7 @@ Route::post('/eliminarempleados/{id}', [EmpleadoController::class, 'destroy']);
 Route::get('/vercitas', [CitaController::class, 'index']);
 Route::get('/citas/{id}', [CitaController::class, 'show']);
 Route::post('/citas', [CitaController::class, 'store']);
-Route::put('/citas/{id}', [CitaController::class, 'update']);
+Route::post('/actualizarcita/{id}', [CitaController::class, 'update']);
 Route::delete('/citas/{id}', [CitaController::class, 'destroy']);
 Route::get('/citas/codigo/{codigo}', [CitaController::class, 'buscarPorCodigo']);
 
@@ -41,6 +41,7 @@ Route::post('/servicioeliminar/{id}', [ServicioController::class, 'destroy']);
 
 Route::get('/notificaciones', [NotificacionController::class, 'index']);
 Route::get('/notificaciones/{id}', [NotificacionController::class, 'show']);
-Route::post('/notificaciones', [NotificacionController::class, 'store']);
-Route::put('/notificaciones/{id}', [NotificacionController::class, 'update']);
+Route::post('/notificaciones/{id}', [NotificacionController::class, 'update']);
 Route::delete('/notificaciones/{id}', [NotificacionController::class, 'destroy']);
+Route::get('/notificacionesleida', [NotificacionController::class, 'leidas']);
+Route::get('/notificacionesnoleida', [NotificacionController::class, 'noLeidas']);

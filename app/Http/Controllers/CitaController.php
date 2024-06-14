@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cita;
+use App\Models\Notificacion; // Importar el modelo Notificacion
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -16,7 +17,7 @@ class CitaController extends Controller
      */
     public function index()
     {
-        $citas = Cita::with('cliente', 'servicio', 'empleado')->get();
+        $citas = Cita::with(['cliente', 'servicio', 'empleado:id,nombre,tipo'])->get();
         return response()->json($citas);
     }
 
@@ -52,6 +53,15 @@ class CitaController extends Controller
             return response()->json(['error' => $validator->errors()], 400);
         }
 
+        $client_id = $request->input('client_id');
+
+        // Verificar si el cliente ya tiene una cita existente
+        $existingCita = Cita::where('client_id', $client_id)->first();
+
+        if ($existingCita) {
+            return response()->json(['error' => 'El cliente ya tiene una cita pendiente.'], 400);
+        }
+
         // Generar un código QR único de 9 caracteres
         $qrCode = Str::random(9);
         $validatedData = $validator->validated();
@@ -59,7 +69,16 @@ class CitaController extends Controller
 
         $cita = Cita::create($validatedData);
 
-        return response()->json(['message' => 'Cita creada correctamente', 'cita' => $cita], 201);
+        // Crear una nueva notificación
+        $notificacionData = [
+            'cliente_id' => $validatedData['client_id'],
+            'mensaje' => 'Nueva cita creada con código QR: ' . $qrCode,
+            'fecha_envio' => now(),
+            'leido' => false,
+        ];
+        $notificacion = Notificacion::create($notificacionData);
+
+        return response()->json(['message' => 'Cita y notificación creadas correctamente', 'cita' => $cita, 'notificacion' => $notificacion], 201);
     }
 
     /**

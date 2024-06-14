@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Notificacion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class NotificacionController extends Controller
 {
@@ -28,26 +29,6 @@ class NotificacionController extends Controller
     {
         $notificacion = Notificacion::with('cliente')->findOrFail($id);
         return response()->json($notificacion);
-    }
-
-    /**
-     * Crear una nueva notificación
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'cliente_id' => 'required|exists:clientes,id',
-            'mensaje' => 'required|string',
-            'fecha_envio' => 'required|date',
-            'leido' => 'required|boolean',
-        ]);
-
-        $notificacion = Notificacion::create($validatedData);
-
-        return response()->json($notificacion, 201);
     }
 
     /**
@@ -84,5 +65,27 @@ class NotificacionController extends Controller
         $notificacion->delete();
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Mostrar todas las notificaciones leídas
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function leidas()
+    {
+        $notificacionesLeidas = Notificacion::where('leido', true)->get();
+        return response()->json($notificacionesLeidas);
+    }
+
+    /**
+     * Mostrar todas las notificaciones no leídas
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function noLeidas()
+    {
+        $notificacionesNoLeidas = Notificacion::where('leido', false)->get();
+        return response()->json($notificacionesNoLeidas);
     }
 }
