@@ -9,9 +9,6 @@ use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\NotificacionController;
 
 
-
-
-
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
