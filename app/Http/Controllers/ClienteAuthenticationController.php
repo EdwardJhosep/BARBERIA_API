@@ -77,4 +77,22 @@ class ClienteAuthenticationController extends Controller
 
         return response()->json(['message' => 'Sesión cerrada correctamente'], 200);
     }
+    public function show($id)
+    {
+        $cliente = Cliente::find($id);
+    
+        if (!$cliente) {
+            return response()->json(['error' => 'Cliente no encontrado'], 404);
+        }
+    
+        $clienteData = [
+            'nombre' => $cliente->nombre,
+            'email' => $cliente->email,
+            'genero' => $cliente->genero,
+            'telefono' => $cliente->telefono,
+            'foto' => asset($cliente->foto), // Devuelve la URL completa de la foto
+        ];
+    
+        return response()->json(['cliente' => $clienteData], 200);
+    }
 }

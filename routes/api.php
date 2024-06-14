@@ -15,6 +15,7 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/cliente/register', [ClienteAuthenticationController::class, 'register']);
 Route::post('/cliente/login', [ClienteAuthenticationController::class, 'login']);
+Route::get('verclientes/{id}', [ClienteAuthenticationController::class, 'show']);
 Route::post('/cliente/logout', [ClienteAuthenticationController::class, 'logout']);
 
 Route::get('/verempleados', [EmpleadoController::class, 'index']);
