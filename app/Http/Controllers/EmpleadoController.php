@@ -16,6 +16,10 @@ class EmpleadoController extends Controller
     public function index()
     {
         $empleados = Empleado::all();
+        // Ajusta la URL de la imagen para que sea accesible desde el navegador
+        foreach ($empleados as $empleado) {
+            $empleado->foto = asset($empleado->foto);
+        }
         return response()->json($empleados);
     }
 

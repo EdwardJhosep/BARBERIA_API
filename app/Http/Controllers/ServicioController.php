@@ -16,9 +16,20 @@ class ServicioController extends Controller
      */
     public function index()
     {
+        // Obtener todos los servicios
         $servicios = Servicio::all();
+    
+        // Recorrer los servicios y ajustar las URLs de las imágenes
+        foreach ($servicios as $servicio) {
+            $servicio->foto1 = asset($servicio->foto1); // URL completa de la foto1
+            $servicio->foto2 = asset($servicio->foto2); // URL completa de la foto2
+            $servicio->foto3 = asset($servicio->foto3); // URL completa de la foto3
+        }
+    
+        // Retornar la respuesta JSON con los servicios actualizados
         return response()->json($servicios);
     }
+    
 
     /**
      * Mostrar un servicio específico
